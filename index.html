@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Números Romanos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Estilos personalizados para las pestañas */
+        .tab-active {
+            border-bottom-width: 2px;
+            border-color: #4f46e5; /* indigo-600 */
+            color: #4f46e5 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Contenedor Principal (Card-based UI) -->
+    <main class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+        
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-indigo-600 to-blue-500 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold tracking-tight">Conversor Romano</h1>
+            <p class="text-indigo-100 text-sm mt-1 opacity-90">Enteros &harr; Números Romanos</p>
+        </header>
+
+        <!-- Toggle Direction (Tabs) -->
+        <div class="flex border-b border-gray-200">
+            <button id="tab-int-to-rom" class="flex-1 py-4 text-sm font-semibold text-gray-500 hover:text-gray-800 transition tab-active focus:outline-none" aria-selected="true" role="tab">
+                Entero a Romano
+            </button>
+            <button id="tab-rom-to-int" class="flex-1 py-4 text-sm font-semibold text-gray-500 hover:text-gray-800 transition focus:outline-none" aria-selected="false" role="tab">
+                Romano a Entero
+            </button>
+        </div>
+
+        <div class="p-6">
+            <!-- Formulario y Área de Entrada -->
+            <div class="space-y-4">
+                <div>
+                    <label id="input-label" for="converter-input" class="block text-sm font-medium text-gray-700 mb-1">
+                        Número Entero (1 - 3999)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="converter-input" 
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-lg bg-gray-50 focus:bg-white"
+                        placeholder="Ej. 2024"
+                        autocomplete="off"
+                    >
+                    <!-- Mensaje de Error -->
+                    <p id="error-message" class="text-red-500 text-sm mt-2 hidden transition-all" role="alert"></p>
+                </div>
+
+                <!-- Icono Separador -->
+                <div class="flex justify-center py-1">
+                    <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                </div>
+
+                <!-- Área de Resultado -->
+                <div>
+                    <label id="output-label" class="block text-sm font-medium text-gray-700 mb-1">
+                        Número Romano
+                    </label>
+                    <div id="converter-output" class="w-full px-4 py-4 rounded-xl bg-indigo-50 border border-indigo-100 text-2xl font-bold text-center min-h-[70px] flex items-center justify-center break-all text-indigo-700 shadow-inner">
+                        <!-- Result -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /**
+         * ----------------------------------------
+         * 1. LÓGICA DE ALGORITMIA Y CONVERSIÓN
+         * ----------------------------------------
+         */
+        
+        // Mapa de equivalencias para construir números romanos
+        const ROMAN_MAP = [
+            { value: 1000, symbol: 'M' },
+            { value: 900,  symbol: 'CM' },
+            { value: 500,  symbol: 'D' },
+            { value: 400,  symbol: 'CD' },
+            { value: 100,  symbol: 'C' },
+            { value: 90,   symbol: 'XC' },
+            { value: 50,   symbol: 'L' },
+            { value: 40,   symbol: 'XL' },
+            { value: 10,   symbol: 'X' },
+            { value: 9,    symbol: 'IX' },
+            { value: 5,    symbol: 'V' },
+            { value: 4,    symbol: 'IV' },
+            { value: 1,    symbol: 'I' }
+        ];
+
+        // Mapeo diccionario para pasar de romano a entero (evaluación carácter a carácter)
+        const ROMAN_VALUES = {
+            'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000
+        };
+
+        // Expresión Regular ESTRICTA para validar estructura semántica correcta del Número Romano
+        // Impide repeticiones como IIII, VV, LL, DD o formatos incorrectos como IC.
+        const ROMAN_REGEX = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
+
+        /**
+         * Convierte un entero a su representación romana
+         * @param {number} num - El número entero a convertir
+         * @returns {string} El número romano resultante
+         */
+        function intToRoman(num) {
+            let result = '';
+            for (let i = 0; i < ROMAN_MAP.length; i++) {
+                while (num >= ROMAN_MAP[i].value) {
+                    result += ROMAN_MAP[i].symbol;
+                    num -= ROMAN_MAP[i].value;
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Convierte un número romano (string) a entero
+         * @param {string} str - El número romano ingresado
+         * @returns {number} El equivalente en entero
+         */
+        function romanToInt(str) {
+            str = str.toUpperCase();
+            let result = 0;
+            for (let i = 0; i < str.length; i++) {
+                const current = ROMAN_VALUES[str[i]];
+                const next = ROMAN_VALUES[str[i + 1]];
+                
+                // Si el carácter actual es menor que el siguiente (ej: I antes que V)
+                if (next && current < next) {
+                    result += next - current; // Sumamos la resta
+                    i++; // Saltamos el siguiente índice, ya procesado
+                } else {
+                    result += current;
+                }
+            }
+            return result;
+        }
+
+        /**
+         * ----------------------------------------
+         * 2. MANIPULACIÓN DEL DOM Y EVENTOS (UI)
+         * ----------------------------------------
+         */
+
+        // Estado inicial
+        let isIntToRomanMode = true;
+
+        // Referencias de Nodos del DOM
+        const tabIntToRom = document.getElementById('tab-int-to-rom');
+        const tabRomToInt = document.getElementById('tab-rom-to-int');
+        const inputField  = document.getElementById('converter-input');
+        const outputField = document.getElementById('converter-output');
+        const inputLabel  = document.getElementById('input-label');
+        const outputLabel = document.getElementById('output-label');
+        const errorMessage = document.getElementById('error-message');
+
+        function initApp() {
+            // Eventos para el cambio de pestañas / toggle
+            tabIntToRom.addEventListener('click', () => setMode(true));
+            tabRomToInt.addEventListener('click', () => setMode(false));
+
+            // Validación en tiempo real basada en input
+            inputField.addEventListener('input', handleValidationAndConversion);
+
+            // Filtro (Keydown) para bloquear físicamente caracteres no permitidos según el modo activo
+            inputField.addEventListener('keydown', (e) => {
+                // Permitimos teclas de uso común de control
+                if (e.ctrlKey || e.metaKey || e.altKey || e.key.length > 1) return;
+
+                if (isIntToRomanMode) {
+                    // MODO: Entero. Bloquear si no es número.
+                    if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                } else {
+                    // MODO: Romano. Bloquear si no es una de las 7 letras válidas.
+                    if (!/^[IVXLCDMivxlcdm]$/.test(e.key)) e.preventDefault();
+                }
+            });
+        }
+
+        /**
+         * Cambia el modo y actualiza textos, placeholders y resets.
+         * @param {boolean} intToRom - True para Integer to Roman.
+         */
+        function setMode(intToRom) {
+            isIntToRomanMode = intToRom;
+            
+            // Actualización visual de las tabs
+            if (intToRom) {
+                tabIntToRom.classList.add('tab-active');
+                tabIntToRom.setAttribute('aria-selected', 'true');
+                
+                tabRomToInt.classList.remove('tab-active');
+                tabRomToInt.setAttribute('aria-selected', 'false');
+                
+                inputLabel.textContent = "Número Entero (1 - 3999)";
+                outputLabel.textContent = "Número Romano";
+                inputField.placeholder = "Ej. 2024";
+            } else {
+                tabRomToInt.classList.add('tab-active');
+                tabRomToInt.setAttribute('aria-selected', 'true');
+                
+                tabIntToRom.classList.remove('tab-active');
+                tabIntToRom.setAttribute('aria-selected', 'false');
+                
+                inputLabel.textContent = "Número Romano";
+                outputLabel.textContent = "Número Entero";
+                inputField.placeholder = "Ej. MMXXIV";
+            }
+
+            // Limpiar datos y foco
+            inputField.value = '';
+            outputField.textContent = '';
+            hideError();
+            inputField.focus();
+        }
+
+        /**
+         * Handler principal para entrada de datos. Valida límites y sintaxis en tiempo real.
+         */
+        function handleValidationAndConversion(e) {
+            const val = e.target.value.trim();
+            
+            // Si está vacío, limpiamos la salida y errores
+            if (val === '') {
+                outputField.textContent = '';
+                hideError();
+                return;
+            }
+
+            if (isIntToRomanMode) {
+                const num = parseInt(val, 10);
+                
+                // Validación para enteros (Rango)
+                if (isNaN(num) || num < 1 || num > 3999) {
+                    showError("Introduce un número entero válido entre 1 y 3999.");
+                    // Mantenemos vacío el output en caso de error
+                    outputField.textContent = '';
+                } else {
+                    hideError();
+                    outputField.textContent = intToRoman(num);
+                }
+            } else {
+                const str = val.toUpperCase();
+                
+                // Validación Estricta para romanos (Patrón Regex)
+                if (!ROMAN_REGEX.test(str)) {
+                    showError("Formato romano no válido (Ej. no se permiten IIII, VV o cadenas mal formadas).");
+                    outputField.textContent = '';
+                } else {
+                    hideError();
+                    outputField.textContent = romanToInt(str);
+                }
+            }
+        }
+
+        /**
+         * Funcionalidades de feedback de error UI
+         */
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.classList.remove('hidden');
+            // Cambiamos colores de borde al input para alertar al usuario
+            inputField.classList.remove('focus:ring-indigo-500', 'focus:border-indigo-500', 'border-gray-300');
+            inputField.classList.add('border-red-500', 'focus:ring-red-500', 'focus:border-red-500', 'text-red-700');
+        }
+
+        function hideError() {
+            errorMessage.classList.add('hidden');
+            inputField.classList.add('focus:ring-indigo-500', 'focus:border-indigo-500', 'border-gray-300');
+            inputField.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500', 'text-red-700');
+        }
+
+        // Iniciar la UI
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

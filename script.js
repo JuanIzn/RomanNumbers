@@ -139,5 +139,11 @@ function handleConversion() {
 }
 
 // Attach an event listener to the convert button to trigger the conversion when clicked.
-document.getElementById('convertButton').addEventListener('click', handleConversion);
+if (typeof document !== 'undefined') {
+  document.getElementById('convertButton').addEventListener('click', handleConversion);
+}
 
+// Expose conversion functions for Node-based tests.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { integerToRoman, romanToInteger };
+}

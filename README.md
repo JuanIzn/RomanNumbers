@@ -6,6 +6,7 @@ This is a simple university project to convert integers to Roman numerals and vi
 - Integer to Roman conversion (1 - 3999).
 - Roman to Integer conversion (supports case-insensitivity).
 - Simple and responsive web interface.
+- Automatic test execution and lint verification via Github Actions.
 
 ## How to use
 Simply open the `index.html` file in any web browser.
@@ -15,5 +16,3 @@ To run the automated tests in the terminal:
 ```bash
 npm test
 ```
-
-Tests are automatically executed on every push via GitHub Actions.

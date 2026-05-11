@@ -132,15 +132,26 @@ function handleConversion() {
       const num = romanToInteger(input);
       resultDiv.textContent = `Integer: ${num}`;
     }
+    // Track successful conversions with the mode used.
+    gtag('event', 'conversion_success', { conversion_mode: mode });
   } catch (error) {
     // Display any error messages encountered during conversion.
     errorDiv.textContent = error.message;
+    // Track failed conversions with the mode and the specific error message.
+    gtag('event', 'conversion_error', {
+      conversion_mode: mode,
+      error_message: error.message
+    });
   }
 }
 
 // Attach an event listener to the convert button to trigger the conversion when clicked.
+// Also track when the user switches between conversion modes.
 if (typeof document !== 'undefined') {
   document.getElementById('convertButton').addEventListener('click', handleConversion);
+  document.getElementById('conversionMode').addEventListener('change', function () {
+    gtag('event', 'mode_changed', { selected_mode: this.value });
+  });
 }
 
 // Expose conversion functions for Node-based tests.

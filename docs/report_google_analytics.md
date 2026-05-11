@@ -11,7 +11,7 @@ format:
 
 # Overview
 
-The Roman Number Converter is a single-page tool that converts integers to Roman numerals and vice versa. Google Analytics 4 was integrated to go beyond passive traffic measurement and capture how users actually interact with the converter — which modes they use, when they succeed, and where they fail.
+The Roman Number Converter is a single-page tool that converts integers to Roman numerals and vice versa. Google Analytics 4 was integrated to go beyond passive traffic measurement and capture how users actually interact with the converter, which modes they use, when they succeed, and where they fail.
 
 **Live URL:** https://juanizn.github.io/RomanNumbers/
 
